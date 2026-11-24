@@ -1,6 +1,6 @@
 ---
 name: "subhd-create-mcq"
-description: "Create MCQ, Fill-in-the-Blank, Match-the-Columns and Comprehension questions on Newton School's Django admin (django.newtonschool.co) via the user's Chrome, with topic mappings; deliver the admin URLs where the user wants them."
+description: "Create MCQ, Fill-in-the-Blank, Match-the-Columns, Comprehension and Subjective questions on Newton School's Django admin (django.newtonschool.co) via the user's Chrome, with topic mappings; deliver the admin URLs where the user wants them."
 ---
 
 # subhd-create-mcq
@@ -11,6 +11,7 @@ Question add: `https://django.newtonschool.co/admin/assessments/multiplechoicequ
 Question change: `https://django.newtonschool.co/admin/assessments/multiplechoicequestion/<id>/change/`
 Question search: `https://django.newtonschool.co/admin/assessments/multiplechoicequestion/?q=<text>`
 Comprehension add/change: `https://django.newtonschool.co/admin/assessments/comprehension/add/` · `.../comprehension/<id>/change/`
+Subjective add/change: `https://django.newtonschool.co/admin/assignments/assignmentquestion/add/` · `.../assignmentquestion/<id>/change/` · search `.../assignmentquestion/?q=<text>`
 
 Do **not** keep or write a run log.
 
@@ -25,9 +26,9 @@ There is no standard input format. Questions can come from chat, a Google Doc, a
 **Only a topic given?** Write the questions yourself: a sensible count and type if not given (default 5 MCQs), 4 options, one clearly correct answer, plausible wrong options, and a short explanation. **Show the drafts in chat and wait for approval before creating anything.** Questions the user supplied need no approval; supplying them is the approval.
 
 ### 2. Figure out the rest yourself
-- **Type:** options → MCQ; a blank (`____`) → Fill in the Blanks; two columns + a mapping → Match the Columns; a passage with questions under it → Comprehension.
+- **Type:** options → MCQ; a blank (`____`) → Fill in the Blanks; two columns + a mapping → Match the Columns; a passage with questions under it → Comprehension; open-ended instructions the student answers in writing or with a file (no options, no single answer) → Subjective.
 - **Difficulty & Bloom:** use them if given; otherwise judge them silently (rules below).
-- **Explanation:** if not given, write a short one (one or two sentences on why the answer is right). FIB explanation stays empty.
+- **Explanation:** if not given, write a short one (one or two sentences on why the answer is right). FIB explanation stays empty. Subjective has no explanation; its editorial stays empty.
 - **Topics:** pick from the user's topic list (rules below).
 
 Check everything before ANY save, and report all problems in ONE message:
@@ -35,6 +36,7 @@ Check everything before ANY save, and report all problems in ONE message:
 - FIB: every blank has one answer.
 - Match: equal column counts and a complete one-to-one answer key.
 - Comprehension: a passage plus at least one valid MCQ.
+- Subjective: a title and the instructions (task statement). No answer key needed.
 
 **Ask only what is missing, once, in ONE AskUserQuestion call:**
 - **Topic list** (`Name  ID`), if not already given for this subject. Never guess IDs or reuse another subject's list. If topic names in the source have no ID in the list, list them with the questions that use them and offer: paste the IDs / use the closest listed topic. Flag a name that appears twice with different IDs.
@@ -43,12 +45,12 @@ Check everything before ANY save, and report all problems in ONE message:
 - **Optional rows** (spares/backups): ask in plain words whether to include them, only if the source has any.
 
 ### 3. Create them on Django
-First check the browser (below). Then use procedure A for each question and procedure B for passages. For more than ~5 questions, drive A and B with the **resumable runner**, so a disconnect never loses work or creates duplicates. For 1–5 questions, the same steps can be done call by call with the runner's helper functions.
+First check the browser (below). Then use procedure A for each question, procedure B for passages and procedure C for Subjective questions. For more than ~5 questions, drive A and B with the **resumable runner**, so a disconnect never loses work or creates duplicates. For 1–5 questions, the same steps can be done call by call with the runner's helper functions.
 
 ### 4. Send the links
-- **In the reply:** ONLY the change URLs, one per line, in input order. For a comprehension: its URL first, then its MCQ URLs.
+- **In the reply:** ONLY the change URLs, one per line, in input order. For a comprehension: its URL first, then its MCQ URLs. Subjective URLs are `/admin/assignments/assignmentquestion/<id>/change/`.
 - **Next to each question in a sheet** (e.g. a new column "Django Link"): write the header, then one URL per row, matched by question ID, never by position. A passage row gets the comprehension URL.
-- **New rows in a sheet:** columns `#`, `Type`, `Question` (short gist), `Admin URL`.
+- **New rows in a sheet:** columns `#`, `Type` (MCQ/FIB/Match/Comprehension/Subjective), `Question` (short gist), `Admin URL`.
 - **Google Doc:** append `<n>. <Type> — <gist> — <Admin URL>`.
 - Long runs: write finished links partway through as a checkpoint. At the end, read the destination back and compare it with the expected list. If the connector is down, say so in one line and put the links in the reply.
 
@@ -59,6 +61,7 @@ The only other messages allowed: the one setup question, validation problems, dr
   - Remember: recall a fact. Understand: explain why/how, interpret. Apply: use in a scenario, predict simple output. Analyze: trace, debug, cause and effect. Evaluate: choose and justify. Create: design (rare).
 - **Difficulty:** Beginner (basic recall) · Easy (one concept, weak wrong options) · Medium (real understanding, plausible wrong options) · Hard (multi-step, subtle wrong options) · Challenge.
 - **Topics (standalone question):** 2–3 best fits, ranked, relevance 10/8/6, main topic on the first. If the source says `Parent › Child`, use the child first, then the parent. If only one topic fits, add its parent or nearest related topic. If nothing fits, ask; don't force a weak match.
+- **Subjective:** same 2–3 topic rule; every topic row also gets the question's **difficulty**, and **Mandatory only on the main topic row**.
 - **Comprehension:** ONE topic for the passage. Every MCQ of that passage uses exactly that topic, at relevance 10, as Main Topic, with the same utility type. The passage's difficulty = the most common difficulty of its MCQs.
 
 ## Browser rules
@@ -85,6 +88,8 @@ The only other messages allowed: the one setup question, validation problems, dr
 
 - With Case insensitivity on, Django saves FIB answers in **lowercase** (`BrowserWindow` → `browserwindow`). Compare FIB answers ignoring case when verifying.
 - Match keys: short unique lowercase words (`one`, `two`…). Strip `1.` / `P.` prefixes from the column texts.
+
+**Subjective defaults** (assignment-question form, see C): question_type = Subjective · question_for_assignment_type = Normal Assignment + Competitive Assignment · max_points = 10 unless given · Bloom given or judged · **feedback_evaluable ON** · peer_reviewed OFF · editorial EMPTY · no file attachments (students attach files, never the instructor) · input/output/example/constraints empty.
 
 ## Text → HTML (CKEditor fields: question_text, comprehension_text)
 - Escape `&`, `<`, `>` first, otherwise `<div>` or `a < b` gets swallowed as HTML. Then: paragraphs → `<p>`; inline backticks → `<code>`; code blocks or a command on its own line → `<pre><code>…</code></pre>` (an FIB `[[blank1]]` may sit inside); tables → `<table border="1" cellpadding="4">` with `<thead>`; lists → `<ul>`/`<ol>`; bold → `<strong>`. Word bank → `<p><strong>Word bank:</strong> a · b · c</p>`.
@@ -116,6 +121,15 @@ Topics can NOT be added on /add/ ("Add topics after creating multiple choice que
 3. **Save 2, topic ONLY:** `#comprehension_topic_mappings-group` already has one blank row: `-topic` = ID, utility by text, `-relevance` = 10 (there is no main_topic or topic_input here). Don't touch the MCQ rows in this save (it fails with "does not have topic … with same relevance"). Don't clear a filled row and re-save (gives a 500 error; reload and redo cleanly).
 4. **Save 3, MCQs:** `#comprehension_multiple_choice_question_mappings-group` (0 rows): per MCQ click `.add-row a`, set `-multiple_choice_question` = ID and `-order` = 1, 2, 3… Save.
 5. **Verify:** difficulty, topic row = `topic:<utility>:10`, MCQ rows `id:order`, text length, success message.
+
+## C. Subjective — three saves (verified on question 30567)
+Lives in a different admin: `/admin/assignments/assignmentquestion/`, form `#assignmentquestion_form` (the page also has `#previewquestionform` and `#logout-form`, so always scope selectors to `#assignmentquestion_form`). There is **no difficulty field**: the read-only "Difficulty type" is derived from the topic rows' difficulty (it shows Easy until rows are set).
+1. **Save 1, create:** on /add/ set `question_title` (required), `question_text` via `CKEDITOR.instances.id_question_text` (instructions as HTML: paragraphs, `<ol>/<ul>`, `<code>`, `<pre><code>` for schemas/code, tables), `question_type` = Subjective (by text; the add-page default is Coding), `max_points` (required, default 10), `question_for_assignment_type` = Normal Assignment + Competitive Assignment, `bloom_taxonomy`, `feedback_evaluable` = checked, `peer_reviewed` = unchecked, `editorial` empty, `topic_input` empty. Save with `#assignmentquestion_form input[name=_continue]`. Success = `/assignmentquestion/<id>/change/` + `.messagelist .success`.
+2. **Save 2, topics:** `topic_input` = `ID1,ID2,ID3`, save. Rows appear in `#assignment_question_topic_mappings-group`.
+3. **Save 3, mappings:** on saved rows the topic is shown as **text** (no `-topic` input), so match each row by its topic **name** from the user's list (`td.field-topic` text starts with the name). Per row: `-question_difficulty_type` (Beginner/Easy/Medium/Hard/Challenge) = the question's difficulty on every row; `-question_utility_type` by text; `-relevance` 10/8/6 by rank; `-main_topic` and `-mandatory` checked **only** on the first row, unchecked on the rest (new rows default to unchecked after save 2; the empty-form template defaults them to checked, so set them explicitly). Save.
+4. **Verify** after reload: type Subjective, feedback_evaluable on, peer_reviewed off, editorial empty, Bloom, assignment types, max points, each topic row `name:difficulty:utility:relevance:main:mandatory`, and that the read-only Difficulty type now equals the chosen difficulty.
+
+Duplicate guard: search `/admin/assignments/assignmentquestion/?q=<title>` before recreating after an unclear result. Subjective questions are not handled by the runner below; do them call by call (they are usually few).
 
 ## Resumable runner (use for more than ~5 questions)
 The progress note lives in the page's `localStorage`, so it survives reloads and disconnects.

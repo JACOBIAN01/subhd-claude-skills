@@ -5,7 +5,7 @@ Customized Claude skills for day-to-day work at Newton School.
 | Skill | What it does |
 |---|---|
 | [`subhd-create-mbr`](#subhd-create-mbr) | Builds a multi-tab Google Doc MBR (Monthly Business Report) for any course. |
-| [`subhd-create-mcq`](#subhd-create-mcq) | Creates MCQ, Fill-in-the-Blank, Match-the-Columns and Comprehension questions on Newton School's Django admin. |
+| [`subhd-create-mcq`](#subhd-create-mcq) | Creates MCQ, Fill-in-the-Blank, Match-the-Columns, Comprehension and Subjective questions on Newton School's Django admin. |
 
 ## Install
 1. Download this repository as a zip (Code > Download ZIP), or zip a single skill folder so `SKILL.md` is inside it.
@@ -36,13 +36,14 @@ Ask Claude: "Create an MBR for my course."
 
 ## subhd-create-mcq
 
-A Claude skill that creates questions on Newton School's internal Django admin (`django.newtonschool.co/admin/assessments/`) by driving your logged-in Chrome, then returns each question's admin URL. Works for 1 question or 200.
+A Claude skill that creates questions on Newton School's internal Django admin (`django.newtonschool.co/admin/assessments/` and `/admin/assignments/`) by driving your logged-in Chrome, then returns each question's admin URL. Works for 1 question or 200.
 
 ### Question types
 - **Multiple Choice**: options A–E, correct answer, explanation, shuffle on.
 - **Fill in the Blanks**: `[[key]]` blanks with one answer each, space- and case-insensitive, shuffle off.
 - **Match the Columns**: one key / display text / correct answer row per pair, shuffle off, no validators.
 - **Comprehension**: creates the MCQs first, then the passage, then maps the MCQs with order 1, 2, 3…
+- **Subjective** (assignment question): instructions as rich text; students answer in writing or attach a file. Feedback evaluable on, peer review off, editorial empty; difficulty is set on each topic row, with Mandatory only on the main topic.
 
 ### What it does
 - Takes questions from anywhere: chat, a Google Doc, a Google Sheet, or a sheet index plus a doc. Question + options + correct option is enough.
@@ -50,7 +51,7 @@ A Claude skill that creates questions on Newton School's internal Django admin (
 - Given only a topic, writes the questions, shows the drafts, and creates them after you approve.
 - Asks once, only for what's missing: topic list, utility type (Application / Learning, or "Always"), where the links go, and whether to include spare rows.
 - Validates every question before saving (answer keys, blanks, pairs, topic fit).
-- Always sets Normal + Competitive assessment types.
+- Always sets Normal + Competitive assessment (or assignment) types.
 - Maps 2–3 best-fit topics (relevance 10/8/6, main topic on the top one); a comprehension and its MCQs share one topic.
 - Follows the portal's required save order (create, then topics, then mappings) and checks every saved question.
 - For big batches, uses a resumable runner kept in the browser, so a Chrome disconnect never loses work or creates duplicates.
