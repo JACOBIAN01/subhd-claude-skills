@@ -6,6 +6,7 @@ Customized Claude skills for day-to-day work at Newton School.
 |---|---|
 | [`subhd-create-mbr`](#subhd-create-mbr) | Builds a multi-tab Google Doc MBR (Monthly Business Report) for any course. |
 | [`subhd-create-mcq`](#subhd-create-mcq) | Creates MCQ, Fill-in-the-Blank, Match-the-Columns, Comprehension and Subjective questions on Newton School's Django admin. |
+| [`subhd-create-assessment`](#subhd-create-assessment) | Builds an Assessment (a collection of MCQs) on Newton School's Django admin: non-competitive or proctored competitive, for FSD LU or a batch course. |
 
 ## Install
 1. Download this repository as a zip (Code > Download ZIP), or zip a single skill folder so `SKILL.md` is inside it.
@@ -66,6 +67,30 @@ Run `/subhd-create-mcq` and paste your questions, share a doc or sheet link, or 
 
 ---
 
+## subhd-create-assessment
+
+A Claude skill that builds an **Assessment** (a collection of MCQ, Fill in the Blanks, Match the Columns and Comprehension questions used as a quiz, exam or contest) on Newton School's Django admin (`/admin/assessments/assessment/`) by driving your logged-in Chrome. Coding questions belong in Assignments, not here.
+
+### What it does
+- Always asks first: **non-competitive or competitive (proctored)**, and **FSD LU (course 278) or another course/batch code**.
+- Collects only what's missing: title, MCQ IDs in order, start and end time.
+- Checks the course code and every MCQ ID before saving anything.
+- Non-competitive uses `/add/` with Normal Assessment; competitive uses `/add/?_preset=nst` (proctored, Competitive, auto-unhide) with the honor code and fullscreen instructions.
+- Random MCQs are always off; sorting is Sequential.
+- Three saves: create the blank assessment with settings, add the MCQ IDs, then fix the positions to your order (Django doesn't keep it).
+- Several courses: one assessment per course code.
+- Replies with only the assessment admin URL(s).
+
+### Requirements
+- Claude in Chrome connected to a Chrome browser that is logged into `django.newtonschool.co`.
+- The questions must already exist (create them with `subhd-create-mcq`).
+
+### Use
+Run `/subhd-create-assessment` with a title, MCQ IDs or links, and the start/end time.
+
+---
+
 ## Files
 - `subhd-create-mbr/SKILL.md`
 - `subhd-create-mcq/SKILL.md`
+- `subhd-create-assessment/SKILL.md`
