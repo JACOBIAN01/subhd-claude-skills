@@ -7,6 +7,7 @@ Customized Claude skills for day-to-day work at Newton School.
 | [`subhd-create-mbr`](#subhd-create-mbr) | Builds a multi-tab Google Doc MBR (Monthly Business Report) for any course. |
 | [`subhd-create-mcq`](#subhd-create-mcq) | Creates MCQ, Fill-in-the-Blank, Match-the-Columns, Comprehension and Subjective questions on Newton School's Django admin. |
 | [`subhd-create-assessment`](#subhd-create-assessment) | Builds an Assessment (a collection of MCQs) on Newton School's Django admin: non-competitive or proctored competitive, for FSD LU or a batch course. |
+| [`subhd-create-newtonbox`](#subhd-create-newtonbox) | Builds a complete Newton Box coding question (terminal / Node CLI by default): statement, starter, solution, mocha tests, playgrounds, verification and topics. |
 
 ## Install
 1. Download this repository as a zip (Code > Download ZIP), or zip a single skill folder so `SKILL.md` is inside it.
@@ -90,7 +91,29 @@ Run `/subhd-create-assessment` with a title, MCQ IDs or links, and the start/end
 
 ---
 
+## subhd-create-newtonbox
+
+A Claude skill that builds a complete **Newton Box** coding question on Newton School's Django admin (`/admin/assignments/assignmentquestion/`) by driving your logged-in Chrome. It's tuned for terminal (Node.js CLI) questions on template 34 (Node 20 Code Server) with the Node 20 Chai Mocha test runner.
+
+### What it does
+- Writes the problem statement, student starter (setup plus TODO comments), README syntax reference, solution and chai/mocha tests, then **runs the tests locally**: they must fail on the starter and pass on the solution.
+- Problem statements are clean LeetCode-style HTML (screen layout, requirements, examples, constraints, project files), with no title, difficulty or run section, and guide students without giving the answer.
+- Creates the question, adds the playground mapping, the Chai Mocha test runner and Clone And Link Solution, then writes and saves the Boilerplate, Solution and Test Case playgrounds.
+- Runs the tests against the boilerplate (all fail) and the solution (all pass), syncs Drone, reruns, and clicks **Verify Project Question**.
+- Maps the 2 best topics from your topic list (difficulty per row, relevance 10/8, Main + Mandatory on the first).
+- Replies with only the question admin URL.
+
+### Requirements
+- Claude in Chrome connected to a Chrome browser that is logged into `django.newtonschool.co` and `my.newtonschool.co`, with the window in front while it writes playground files.
+- A topic list (for example the `AD Topic Tree` project doc).
+
+### Use
+Run `/subhd-create-newtonbox` with the question idea, or a full spec.
+
+---
+
 ## Files
 - `subhd-create-mbr/SKILL.md`
 - `subhd-create-mcq/SKILL.md`
 - `subhd-create-assessment/SKILL.md`
+- `subhd-create-newtonbox/SKILL.md`
